@@ -16,13 +16,26 @@ export const DockerImage: FC<IDockerImageProps> = ({ device, command }) => {
     App.addModuleDataListener(receiveModuleData);
   }, []);
 
+  const clearData = (
+    lastUpdate: number,
+    scruttingTime: number,
+    seconds: number
+  ) => {
+    return lastUpdate + seconds * 1000 < scruttingTime;
+  };
+
   const receiveModuleData = async (newValue: ModuleData) => {
     const dockerImage = getLatestDockerImage(newValue);
-    if (!!dockerImage) {
-      setDockerVersion(dockerImage[1]);
-      const formatedTime = formatDate(dockerImage[0]);
-      setDate(formatedTime);
+    if (!!!dockerImage) return;
+    const isDataExpired = clearData(dockerImage[0], newValue.time, +10);
+    if (isDataExpired) {
+      setDockerVersion("--:--:--");
+      setDate("--:--:--");
+      return;
     }
+    setDockerVersion(dockerImage[1]);
+    const formatedTime = formatDate(dockerImage[0]);
+    setDate(formatedTime);
   };
 
   const sendCommand = async () => {
